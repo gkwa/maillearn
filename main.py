@@ -32,6 +32,15 @@ def bytesto(bytes, to, bsize=1024):
     return r
 
 
+def format_output(days_counter, diff, used, remaining):
+    gb1 = bytesto(used, "g", bsize=bsize)
+    gb2 = bytesto(remaining, "g", bsize=bsize)
+
+    if args.xls:
+        return f"{(now + diff).date()}\t{mb2}\t{gb1}\t{gb2}"
+    return f"{(now + diff).date()} {mb2:,.2f} {gb1:,.2f}GB {gb2:,.2f}GB"
+
+
 tz = pytz.timezone("US/Pacific")
 
 datestamp = "12/2/2022"
@@ -42,7 +51,6 @@ now = datetime.datetime.now(tz)
 
 diff = end_date - now
 diff = end_date - now + datetime.timedelta(days=1)
-
 
 max = 6 * 10**9
 remaining = 3.12 * 10**9
@@ -56,20 +64,14 @@ mb2 = bytesto(per_day, "m", bsize=bsize)
 
 i = 0
 diff = datetime.timedelta(days=i)
+
+days_counter = 0
 while now + diff <= end_date:
-    diff = datetime.timedelta(days=i)
-    gb1 = bytesto(used, "g", bsize=bsize)
-    gb2 = bytesto(remaining, "g", bsize=bsize)
-
-    if args.xls:
-        out = f"{(now + diff).date()}\t{mb2}\t{gb1}\t{gb2}"
-    else:
-        out = f"{(now + diff).date()} {mb2:,.2f} {gb1:,.2f}GB {gb2:,.2f}GB"
+    diff = datetime.timedelta(days=days_counter)
+    out = format_output(days_counter, diff, used=used, remaining=remaining)
     print(out)
-
-    i += 1
+    days_counter += 1
     used += per_day
     remaining = max - used
-
 
 print(f"from {now.date()} to {end_date.date()} is {diff.days} days")
