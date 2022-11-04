@@ -1,8 +1,24 @@
 import argparse
+import dataclasses
 import datetime
 
 import dateutil.parser
 import pytz
+
+tz = pytz.timezone("US/Pacific")
+bsize = 1_000
+fudge = bsize**2 / 18
+max = 5.99 * 10**9
+remaining = 3.12 * 10**9
+remaining = max - 3.17 * 10**9
+remaining = 3.06 * 10**9
+used = max - remaining
+
+
+@dataclasses.dataclass
+class MyThing:
+    end_date = dateutil.parser.parse("12/2/2022").astimezone(tz)
+
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
@@ -13,6 +29,8 @@ parser.add_argument(
     required=False,
 )
 args = parser.parse_args()
+
+output_format = "xls" if args.xls else "console"
 
 
 def bytesto(bytes, to, bsize=1024):
@@ -32,48 +50,35 @@ def bytesto(bytes, to, bsize=1024):
     return r
 
 
-def format_output(days_counter, diff, used, remaining, format="console"):
+def format_output(days_counter, diff, used, remaining, format=output_format):
     gb1 = bytesto(used, "g", bsize=bsize)
     gb2 = bytesto(remaining, "g", bsize=bsize)
 
     if not format == "console":
-        return f"{(now + diff).date()}\t{mb2}\t{gb1}\t{gb2}"
-    return f"{(now + diff).date()} {mb2:,.2f} {gb1:,.2f}GB {gb2:,.2f}GB"
+        return f"{(start_date + diff).date()}\t{mb2}\t{gb1}\t{gb2}"
+    return f"{(start_date + diff).date()} {mb2:,.2f} {gb1:,.2f}GB {gb2:,.2f}GB"
 
 
-tz = pytz.timezone("US/Pacific")
+start_date = datetime.datetime.now(tz)
 
-datestamp = "12/2/2022"
+mt = MyThing()
 
-end_date = dateutil.parser.parse(datestamp).astimezone(tz)
-
-now = datetime.datetime.now(tz)
-
-diff = end_date - now
-diff = end_date - now + datetime.timedelta(days=1)
-
-max = 6 * 10**9
-remaining = 3.12 * 10**9
-remaining = max - 3.17 * 10**9
-bsize = 1_000
-used = max - remaining
-fudge = bsize**2 / 18
+diff = mt.end_date - start_date
+diff = mt.end_date - start_date + datetime.timedelta(days=1)
 per_day = remaining / diff.days + fudge
 
 mb2 = bytesto(per_day, "m", bsize=bsize)
 
-i = 0
-diff = datetime.timedelta(days=i)
-
 days_counter = 0
-while now + diff <= end_date:
+diff = datetime.timedelta(days=days_counter)
+while start_date + diff <= mt.end_date:
     diff = datetime.timedelta(days=days_counter)
     out = format_output(
-        days_counter, diff, used=used, remaining=remaining, format="console"
+        days_counter, diff, used=used, remaining=remaining, format=output_format
     )
     print(out)
     days_counter += 1
     used += per_day
     remaining = max - used
 
-print(f"from {now.date()} to {end_date.date()} is {diff.days} days")
+print(f"from {start_date.date()} to {mt.end_date.date()} is {diff.days} days")
