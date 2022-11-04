@@ -32,11 +32,11 @@ def bytesto(bytes, to, bsize=1024):
     return r
 
 
-def format_output(days_counter, diff, used, remaining):
+def format_output(days_counter, diff, used, remaining, format="console"):
     gb1 = bytesto(used, "g", bsize=bsize)
     gb2 = bytesto(remaining, "g", bsize=bsize)
 
-    if args.xls:
+    if not format == "console":
         return f"{(now + diff).date()}\t{mb2}\t{gb1}\t{gb2}"
     return f"{(now + diff).date()} {mb2:,.2f} {gb1:,.2f}GB {gb2:,.2f}GB"
 
@@ -68,7 +68,9 @@ diff = datetime.timedelta(days=i)
 days_counter = 0
 while now + diff <= end_date:
     diff = datetime.timedelta(days=days_counter)
-    out = format_output(days_counter, diff, used=used, remaining=remaining)
+    out = format_output(
+        days_counter, diff, used=used, remaining=remaining, format="console"
+    )
     print(out)
     days_counter += 1
     used += per_day
